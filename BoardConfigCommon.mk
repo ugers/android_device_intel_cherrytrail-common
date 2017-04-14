@@ -30,16 +30,28 @@ TARGET_CPU_ABI_LIST := x86,armeabi-v7a,armeabi
 TARGET_CPU_ABI_LIST_32_BIT := x86,armeabi-v7a,armeabi
 
 # Kernel
-BOARD_KERNEL_CMDLINE := loglevel=5 androidboot.hardware=cherrytrail firmware_class.path=/system/etc/firmware i915.fastboot=1 vga=current i915.modeset=1 drm.vblankoffdelay=1 console=ttyS0,115200n8 bootboost=1 pm_suspend_debug=1 pstore.backend=ramoops
+BOARD_KERNEL_CMDLINE := loglevel=7 androidboot.hardware=cherrytrail firmware_class.path=/system/etc/firmware i915.fastboot=1 vga=current i915.modeset=1 drm.vblankoffdelay=1 console=ttyS0,115200n8 bootboost=1 pm_suspend_debug=1 pstore.backend=ramoops thermal.off=1 androidboot.selinux=disabled
 
 # Binder
 TARGET_USES_64_BIT_BINDER := true
 
 # Bluetooth
+#BOARD_BLUETOOTH_DEVICE := rtl
+BOARD_BLUETOOTH_DEVICE := bcmdhd
+
+ifeq ($(BOARD_BLUETOOTH_DEVICE), rtl)
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := $(COMMON_PATH)/bluetooth
 BOARD_HAVE_BLUETOOTH := true
 BOARD_HAVE_BLUETOOTH_RTK := true
 BLUETOOTH_HCI_USE_RTK_H5 := true
+endif
+
+ifeq ($(BOARD_BLUETOOTH_DEVICE), bcmdhd)
+BOARD_HAVE_BLUETOOTH := true
+BOARD_HAVE_BLUETOOTH_BCM := true
+BOARD_BLUEDROID_VENDOR_CONF := $(COMMON_PATH)/bluetooth/vnd_brcm_x86.txt
+BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR ?= $(COMMON_PATH)/bluetooth
+endif
 
 # Charger
 BOARD_CHARGER_SHOW_PERCENTAGE := true
@@ -142,9 +154,29 @@ BOARD_SEPOLICY_UNION += \
     wpa.te
 
 # Wifi
+#BOARD_WLAN_DEVICE := rtl
+BOARD_WLAN_DEVICE := bcmdhd
+
+ifeq ($(BOARD_WLAN_DEVICE), rtl)
 BOARD_HOSTAPD_DRIVER := NL80211
 BOARD_HOSTAPD_PRIVATE_LIB := lib_driver_cmd_rtl
-BOARD_WLAN_DEVICE := rtl
 BOARD_WPA_SUPPLICANT_DRIVER := NL80211
 BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_rtl
 WPA_SUPPLICANT_VERSION := VER_2_1_DEVEL
+endif
+
+ifeq ($(BOARD_WLAN_DEVICE), bcmdhd)
+BOARD_WIFI_BCM43438 		 := true
+BOARD_WLAN_DEVICE                := bcmdhd
+BOARD_WLAN_DEVICE_REV            := bcm4343
+WPA_SUPPLICANT_VERSION           := VER_0_8_X
+BOARD_WPA_SUPPLICANT_DRIVER      := NL80211
+BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_bcmdhd
+BOARD_HOSTAPD_DRIVER             := NL80211
+BOARD_HOSTAPD_PRIVATE_LIB        := lib_driver_cmd_bcmdhd
+WIFI_BAND                        := 802_11_ABG
+WIFI_DRIVER_FW_PATH_STA    := "/system/etc/firmware/fw_bcm43438a0.bin"
+WIFI_DRIVER_FW_PATH_PARAM := "/sys/module/bcmdhd/parameters/firmware_path"
+WIFI_DRIVER_MODULE_ARG       := "iface_name=wlan0 firmware_path=/system/etc/firmware/fw_bcm43438a0.bin nvram_path=/system/etc/firmware/bcmdhd.cal"
+#    include hardware/broadcom/wlan/bcmdhd/firmware/ap6212/device-bcm.mk
+endif

@@ -27,6 +27,36 @@
 /dev/uhid                                    0660 bluetooth bluetooth
 /dev/ttyHSU0                                 0660 bluetooth net_bt_stack
 
+# Define bcm modules args
+mod:bcm4335		firmware_path=/system/etc/firmware/ nvram_path=/system/etc/firmware/
+mod:bcm43241		firmware_path=/system/etc/firmware/ nvram_path=/system/etc/firmware/
+mod:bcm4334x		firmware_path=/system/etc/firmware/ nvram_path=/system/etc/firmware/
+mod:bcm4334		firmware_path=/system/etc/firmware/ nvram_path=/system/etc/firmware/
+mod:bcm4354		firmware_path=/system/etc/firmware/ nvram_path=/system/etc/firmware/
+mod:bcm43362		firmware_path=/system/etc/firmware/ nvram_path=/system/etc/firmware/
+mod:bcm4330f		firmware_path=/system/etc/firmware/ nvram_path=/system/etc/firmware/
+mod:bcm43430		firmware_path=/system/etc/firmware/ nvram_path=/system/etc/firmware/
+
+mod:8723bs		ifname=wlan0 if2name=p2p0 rtw_power_mgnt=2 rtw_hwpwrp_detect=1
+mod:8189es		ifname=wlan0 if2name=p2p0 rtw_power_mgnt=2 rtw_hwpwrp_detect=1
+
+# Define wlan.driver.vendor for different vendors
+# bcm
+uevent:sdio:c*v02D0d*   setprop wlan.driver.vendor bcm
+# ti
+uevent:sdio:c*v0097d*   setprop wlan.driver.vendor ti
+# mtk
+uevent:sdio:c*v037Ad*   setprop wlan.driver.vendor mtk
+# intel
+uevent:sdio:c*v0089d*   setprop wlan.driver.vendor intel
+# realtek
+uevent:sdio:c*v024Cd*	setprop wlan.driver.vendor rtl
+# marvell
+uevent:sdio:c*v02DFd*	setprop wlan.driver.vendor mrvl
+
+# Modem
+uevent:usb:v1519p0452d* setprop sys.usb.modemevt 1
+
 ##############################################################
 # Source: device/intel/mixins/groups/nfc/fdp/ueventd.rc
 ##############################################################

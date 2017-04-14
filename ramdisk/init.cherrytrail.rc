@@ -51,7 +51,7 @@ service pstore-clean /system/bin/pstore-clean
     class late_start
     oneshot
 
-service watchdogd /sbin/watchdogd
+service watchdogd /sbin/watchdogd 10 20
     user root
     class core
     oneshot
@@ -260,21 +260,41 @@ service bd_prov /system/bin/bd_prov
     disabled
     oneshot
 ##############################################################
+# Source: device/intel/mixins/groups/nfc/fdp/init.rc.1
+##############################################################
+#on boot
+#    # Load NFC I2C driver
+#    insmod ${ro.modules.location}/fdp_nfc.ko
+#
+#on post-fs-data
+#    # create config NFC NVM folder
+#    mkdir /config/nfc 0770 nfc system
+#    start nfc_rest_nvm
+#
+#service nfc_rest_nvm /system/bin/sh /system/bin/nfc_intel_restore.sh
+#    class main
+#    user nfc
+#    group system nfc
+#    disabled
+#    oneshot
+#
+##############################################################
+# Source: device/intel/mixins/groups/nfc/fdp/init.rc
+##############################################################
+#on post-fs-data
+#    # Create data folder for NFC
+#    mkdir /data/nfc 0770 nfc nfc
+#    restorecon_recursive /data/nfc
 ##############################################################
 # Source: device/intel/mixins/groups/wlan/rtl8723bs/init.rc
 ##############################################################
-service p2p_supplicant /system/bin/wpa_supplicant \
-    -ip2p0 -Dnl80211 -c/data/misc/wifi/p2p_supplicant.conf -N \
-    -pforce_single_radio=1 \
-    -iwlan0 -Dnl80211 -c/data/misc/wifi/wpa_supplicant.conf \
-    -I/system/etc/wifi/wpa_supplicant_overlay.conf \
-    -O/data/misc/wifi/sockets -puse_p2p_group_interface=1,force_single_radio=1 \
-    -e/data/misc/wifi/entropy.bin -g@android:wpa_wlan0
+service wpa_supplicant /system/bin/wpa_supplicant -Dnl80211 -iwlan0 -c/data/misc/wifi/wpa_supplicant.conf -d -g@android:wpa_wlan0
     class main
     socket wpa_wlan0 dgram 660 wifi wifi
+    group system wifi inet bluetooth
     disabled
     oneshot
-
+	
 service dhcpcd_wlan0 /system/bin/dhcpcd -aABDKL
      class main
      disabled
@@ -285,19 +305,11 @@ service iprenew_wlan0 /system/bin/dhcpcd -n
      disabled
      oneshot
 
-service dhcpcd_p2p /system/bin/dhcpcd -aABKL
-    class main
-    disabled
-    oneshot
-
-service iprenew_p2p /system/bin/dhcpcd -n
-    class main
-    disabled
-    oneshot
-
 on boot
+    setprop wifi.interface wlan0
+    setprop ap.interface wlan0
     insmod /system/lib/modules/cfg80211.ko
-    insmod /system/lib/modules/8723bs.ko
+    insmod /system/lib/modules/bcmdhd.ko
 ##############################################################
 # Source: device/intel/mixins/groups/widi/gen/init.rc
 ##############################################################
@@ -430,6 +442,7 @@ on post-fs-data
 # Source: device/intel/mixins/groups/touch/atmel1000/init.rc
 ##############################################################
 on post-fs
+    insmod system/lib/modules/atmel_mxt_ts.ko
     chown system system /sys/bus/i2c/devices/i2c-ATML1000:00/power_HAL_suspend
     chown system system /sys/bus/i2c/devices/i2c-ATML1000:01/power_HAL_suspend
     chown system system /sys/bus/i2c/devices/i2c-MSSL1680:00/power_HAL_suspend
@@ -533,6 +546,44 @@ on boot
     mkdir /dev/gps 0770 gps gps
     symlink /dev/ttyHSU1 /dev/gps/ttyGPS
     symlink /sys/class/tty/ttyHSU1/../../power/control /dev/gps/ttyGPSPowerControl
+
+#service gnss_rest_wpc /system/bin/cws_manu -G -n0 -r/config/gnss/GNSS_WPC.bin
+#    user gps
+#    group system
+#    oneshot
+#    disabled
+
+#service gnss_rest_mec /system/bin/cws_manu -G -n1 -r/config/gnss/GNSS_MEC.bin
+#    user gps
+#   group system
+#    oneshot
+#    disabled
+
+#service gnssCG2000 /system/bin/gnssCG2000
+#    class late_start
+#    user gps
+#    group system radio net_admin
+#    socket gnss stream 0660 gps system
+
+# GPS 475x
+     chmod 0777 /system/bin/gpsd
+     chmod 0777 /system/bin/gpscerd
+
+# nStandby GPIO
+     chmod 0660 /sys/devices/platform/intel_mid_gps/intel_mid_gps/enable
+     chown gps gps /sys/devices/platform/intel_mid_gps/intel_mid_gps/enable
+
+# GPS 475x
+service gpscerd /system/bin/gpscerd /data/gps/gps.cer
+    class main
+    user system
+    group system
+    oneshot
+
+service gpsd /system/bin/gpsd -c /system/etc/gps.xml
+    class main
+    user gps
+    group system inet radio sdcard_rw
 
 ##############################################################
 # Source: device/intel/mixins/groups/debug-logs/true/init.rc

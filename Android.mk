@@ -16,7 +16,7 @@
 
 LOCAL_PATH := $(call my-dir)
 
-ifneq ($(filter chuwi_vi10plus cube_iwork8ultimate,$(TARGET_DEVICE)),)
+ifneq ($(filter chuwi_hi8pro cube_iwork8ultimate,$(TARGET_DEVICE)),)
 include $(call all-makefiles-under,$(LOCAL_PATH))
 
 # Hack for prebuilt kernel
